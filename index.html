@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dual Room Reservation Panel</title>
+    <style>
+        /* Base Setup & Performance Resets */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: row;
+            background-color: #000000;
+            overflow: hidden;
+            user-select: none; 
+            -webkit-user-select: none; 
+            touch-action: manipulation;
+        }
+
+        /* Split Screen Column Layout */
+        .room-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 48px 32px;
+            transition: background-color 400ms ease;
+        }
+
+        /* Left column gets a subtle divider */
+        #room1-col {
+            border-right: 1px solid rgba(0, 0, 0, 0.15);
+        }
+
+        /* SVG Icon Containers */
+        .icon-container {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 24px;
+        }
+        .icon-container svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Typography & Status Styles */
+        .room-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .room-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        .room-subtitle {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #4b5563;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-block {
+            text-align: center;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+        .status-label {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #374151;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+        .status-state {
+            font-size: 4rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            line-height: 1;
+            margin-bottom: 24px;
+        }
+        .timer-label {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 4px;
+        }
+        .timer-display {
+            font-size: 4.5rem;
+            font-weight: 700;
+            color: #111827;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+        }
+
+        /* Control Tiers & Buttons */
+        .controls-container {
+            width: 100%;
+            max-width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .btn {
+            width: 100%;
+            font-size: 1.5rem;
+            font-weight: 800;
+            padding: 20px 0;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+            transition: transform 100ms ease, background-color 200ms ease;
+        }
+        .btn:active {
+            transform: scale(0.96);
+        }
+
+        /* Theme Context Colors matching your mockup */
+        /* Available State (Green) */
+        .bg-available { background-color: #d1fae5; }
+        .text-available { color: #059669; }
+        .btn-green { background-color: #059669; color: #ffffff; }
+        .btn-green-light { background-color: #10b981; color: #ffffff; }
+
+        /* Occupied State (Red) */
+        .bg-occupied { background-color: #fee2e2; }
+        .text-occupied { color: #dc2626; }
+        .btn-red { background-color: #ef4444; color: #ffffff; }
+        .btn-neutral { background-color: #e5e7eb; color: #374151; border: 1px solid #d1d5db; }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div id="room1-col" class="room-column bg-available">
+        <div class="room-header">
+            <div id="room1-icon" class="icon-container">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19M19 3V21M19 3H21M19 21H21M11 5H5V19H11M11 5V19M11 5H17V19H11M14 11H15V13H14V113" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h1 class="room-title">Conference Room A</h1>
+            <h2 class="room-subtitle">Room A</h2>
+        </div>
+
+        <div class="status-block">
+            <div class="status-label">Status:</div>
+            <div id="room1-status" class="status-state text-available">Free</div>
+            <div id="room1-timer-container" class="hidden">
+                <div class="timer-label">Time Remaining:</div>
+                <div id="room1-timer" class="timer-display">00:00</div>
+            </div>
+        </div>
+
+        <div class="controls-container">
+            <div id="room1-available-ctrls" class="controls-container">
+                <button onclick="bookRoom('room1', 60)" class="btn btn-green">+ 1 Hr</button>
+                <button onclick="bookRoom('room1', 30)" class="btn btn-green-light">+ 30 Min</button>
+            </div>
+            <div id="room1-occupied-ctrls" class="controls-container hidden">
+                <button onclick="clearRoom('room1')" class="btn btn-neutral">End Meeting Early</button>
+                <button onclick="bookRoom('room1', 15)" class="btn btn-red">+ 15 Min</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="room2-col" class="room-column bg-available">
+        <div class="room-header">
+            <div id="room2-icon" class="icon-container">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19M19 3V21M19 3H21M19 21H21M11 5H5V19H11M11 5V19M11 5H17V19H11M14 11H15V13H14V113" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h1 class="room-title">Conference Room B</h1>
+            <h2 class="room-subtitle">Room B</h2>
+        </div>
+
+        <div class="status-block">
+            <div class="status-label">Status:</div>
+            <div id="room2-status" class="status-state text-available">Free</div>
+            <div id="room2-timer-container" class="hidden">
+                <div class="timer-label">Time Remaining:</div>
+                <div id="room2-timer" class="timer-display">00:00</div>
+            </div>
+        </div>
+
+        <div class="controls-container">
+            <div id="room2-available-ctrls" class="controls-container">
+                <button onclick="bookRoom('room2', 60)" class="btn btn-green">+ 1 Hr</button>
+                <button onclick="bookRoom('room2', 30)" class="btn btn-green-light">+ 30 Min</button>
+            </div>
+            <div id="room2-occupied-ctrls" class="controls-container hidden">
+                <button onclick="clearRoom('room2')" class="btn btn-neutral">End Meeting Early</button>
+                <button onclick="bookRoom('room2', 15)" class="btn btn-red">+ 15 Min</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Inline SVGs to switch between open door and door-with-person indicator
+        const openDoorSvg = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19M19 3V21M19 3H21M19 21H21M11 5H5V19H11M11 5V19M11 5H17V19H11M14 11H15V13H14V113" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        const occupiedDoorSvg = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19M19 3V21M19 3H21M19 21H21M11 5H5V19H11M11 5V19M11 5H17V19H11M14 11H15V13H14V113" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="15" cy="8" r="1.5" fill="currentColor"/><path d="M13 14C13 12.3431 14.3431 11 16 11C17.6569 11 19 12.3431 19 14V19H13V14Z" fill="currentColor"/></svg>`;
+
+        function getEndTime(room) {
+            const val = localStorage.getItem(`${room}_endTime`);
+            return val ? parseInt(val) : null;
+        }
+
+        function bookRoom(room, minutes) {
+            const now = Date.now();
+            let endTime = getEndTime(room);
+            
+            if (endTime && endTime > now) {
+                endTime += minutes * 60 * 1000;
+            } else {
+                endTime = now + (minutes * 60 * 1000);
+            }
+            
+            localStorage.setItem(`${room}_endTime`, endTime);
+            updateUI();
+        }
+
+        function clearRoom(room) {
+            localStorage.removeItem(`${room}_endTime`);
+            updateUI();
+        }
+
+        function updateRoomDisplay(room) {
+            const now = Date.now();
+            const endTime = getEndTime(room);
+            
+            const col = document.getElementById(`${room}-col`);
+            const iconWrap = document.getElementById(`${room}-icon`);
+            const statusText = document.getElementById(`${room}-status`);
+            const timerContainer = document.getElementById(`${room}-timer-container`);
+            const timerDisplay = document.getElementById(`${room}-timer`);
+            const availCtrls = document.getElementById(`${room}-available-ctrls`);
+            const occCtrls = document.getElementById(`${room}-occupied-ctrls`);
+
+            if (endTime && endTime > now) {
+                // OCCUPIED STATE 
+                col.className = "room-column bg-occupied";
+                iconWrap.className = "icon-container text-occupied";
+                iconWrap.innerHTML = occupiedDoorSvg;
+                
+                statusText.innerText = "Occupied";
+                statusText.className = "status-state text-occupied";
+                
+                const diff = endTime - now;
+                const totalSecs = Math.ceil(diff / 1000);
+                const mins = Math.floor(totalSecs / 60);
+                const secs = totalSecs % 60;
+                
+                // Formats countdown cleanly to mm:ss matching image parameters
+                timerDisplay.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                
+                timerContainer.classList.remove('hidden');
+                availCtrls.classList.add('hidden');
+                occCtrls.classList.remove('hidden');
+            } else {
+                // FREE / AVAILABLE STATE
+                col.className = "room-column bg-available";
+                iconWrap.className = "icon-container text-available";
+                iconWrap.innerHTML = openDoorSvg;
+                
+                statusText.innerText = "Free";
+                statusText.className = "status-state text-available";
+                
+                timerContainer.classList.add('hidden');
+                availCtrls.classList.remove('hidden');
+                occCtrls.classList.add('hidden');
+                
+                if (endTime) localStorage.removeItem(`${room}_endTime`); 
+            }
+        }
+
+        function updateUI() {
+            updateRoomDisplay('room1');
+            updateRoomDisplay('room2');
+        }
+
+        setInterval(updateUI, 1000);
+        updateUI();
+    </script>
+</body>
+</html>
