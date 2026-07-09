@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Dual Room Reservation Panel</title>
     
-    <link rel="icon" type="image/svg+xml" href="door-open-svgrepo-com.svg">
-    <link rel="apple-touch-icon" href="door-open-svgrepo-com.svg">
+    <link rel="icon" type="image/svg+xml" href="door-open.svg">
+    <link class="apple-touch-icon" href="door-open.svg">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
 
     <style>
         * {
@@ -17,35 +19,35 @@
             padding: 0;
         }
         
-        /* Layout Defensive Reset */
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
             height: 100vh;
             width: 100vw;
             display: flex;
-            flex-direction: row;
+            flex-direction: column;
             background-color: #000000;
             overflow: hidden;
-            
-            /* Strict safety configurations for tablet kiosk interactions */
             user-select: none; 
             -webkit-user-select: none; 
             touch-action: none; 
         }
 
-        /* RESPONSIVE COLUMN GRID
-           Using safe box-padding calculations to pull elements away 
-           from device camera notches and bottom navigation bars.
-        */
+        /* Two Column Container Split */
+        .columns-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: row;
+            height: calc(100vh - 50px); /* Defensive space for the bottom utility bar */
+            width: 100vw;
+        }
+
         .room-column {
             flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            
-            /* Safe structural vertical padding targets */
-            padding: 4vh 4vw 6vh 4vw; 
+            padding: 4vh 4vw 4vh 4vw; 
             transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -53,7 +55,7 @@
             border-right: 2px solid rgba(0, 0, 0, 0.06);
         }
 
-        /* Scalable Vector Asset Wrappers */
+        /* Header Layout and SVGs */
         .room-header {
             text-align: center;
             width: 100%;
@@ -72,7 +74,6 @@
             object-fit: contain;
         }
 
-        /* Clean High-Contrast Typography */
         .room-title {
             font-size: 1.75rem;
             font-weight: 800;
@@ -87,7 +88,7 @@
             letter-spacing: 0.05em;
         }
 
-        /* Middle Dynamic Status Block */
+        /* Central Display Tiers */
         .status-block {
             text-align: center;
             flex-grow: 1;
@@ -95,7 +96,7 @@
             flex-direction: column;
             justify-content: center;
             width: 100%;
-            padding: 16px 0;
+            padding: 12px 0;
         }
         .status-label {
             font-size: 1.2rem;
@@ -113,7 +114,7 @@
             line-height: 1;
         }
         .timer-wrapper {
-            margin-top: 16px;
+            margin-top: 12px;
         }
         .timer-label {
             font-size: 1.15rem;
@@ -129,10 +130,7 @@
             line-height: 1;
         }
 
-        /* DEFENSIVE CONTROL CONTAINER
-           Caps the width and wraps elements tightly so they never push
-           against the tablet navigation boundaries.
-        */
+        /* Action Controls Layout Box */
         .controls-container {
             width: 100%;
             max-width: 300px;
@@ -141,7 +139,6 @@
             gap: 12px;
         }
 
-        /* Tactile Finger-Friendly Kiosk Buttons */
         .btn {
             width: 100%;
             font-size: 1.45rem;
@@ -152,13 +149,13 @@
             cursor: pointer;
             text-align: center;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            transition: transform 60ms ease, opacity 150ms ease;
+            transition: transform 60ms ease;
         }
         .btn:active {
             transform: scale(0.96);
         }
 
-        /* Visual Theme Palette Mapping */
+        /* Colors Systems */
         .bg-available { background-color: #e6f9f0; }
         .text-available { color: #00a35c; }
         .btn-green-main { background-color: #00a35c; color: #ffffff; }
@@ -174,75 +171,120 @@
             font-size: 1.25rem;
         }
 
+        /* Bottom Utility Bar Layout */
+        .utility-bar {
+            height: 50px;
+            width: 100vw;
+            background-color: #111827;
+            border-top: 1px solid #1f2937;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 24px;
+        }
+        .btn-fullscreen {
+            background-color: #374151;
+            color: #f3f4f6;
+            border: none;
+            padding: 6px 16px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            border-radius: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            cursor: pointer;
+            transition: background-color 200ms ease;
+        }
+        .btn-fullscreen:hover {
+            background-color: #4b5563;
+        }
+
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="room1-col" class="room-column bg-available">
-        <div class="room-header">
-            <div id="room1-icon" class="icon-container"></div>
-            <h1 class="room-title">Conference Room A</h1>
-            <h2 class="room-subtitle">Room A</h2>
-        </div>
+    <div class="columns-wrapper">
+        <div id="room1-col" class="room-column bg-available">
+            <div class="room-header">
+                <div id="room1-icon" class="icon-container"></div>
+                <h1 class="room-title">Conference Room A</h1>
+                <h2 class="room-subtitle">Room A</h2>
+            </div>
 
-        <div class="status-block">
-            <div class="status-label">Status:</div>
-            <div id="room1-status" class="status-state text-available">Free</div>
-            <div id="room1-timer-container" class="timer-wrapper hidden">
-                <div class="timer-label">Time Remaining:</div>
-                <div id="room1-timer" class="timer-display">00:00</div>
+            <div class="status-block">
+                <div class="status-label">Status:</div>
+                <div id="room1-status" class="status-state text-available">Free</div>
+                <div id="room1-timer-container" class="timer-wrapper hidden">
+                    <div class="timer-label">Time Remaining:</div>
+                    <div id="room1-timer" class="timer-display">00:00</div>
+                </div>
+            </div>
+
+            <div class="controls-container">
+                <div id="room1-available-ctrls" class="controls-container">
+                    <button onclick="bookRoom('room1', 60)" class="btn btn-green-main">+ 1 Hr</button>
+                    <button onclick="bookRoom('room1', 30)" class="btn btn-green-sub">+ 30 Min</button>
+                </div>
+                <div id="room1-occupied-ctrls" class="controls-container hidden">
+                    <button onclick="clearRoom('room1')" class="btn btn-neutral-clear">End Meeting Early</button>
+                    <button onclick="bookRoom('room1', 15)" class="btn btn-red-action">+ 15 Min</button>
+                </div>
             </div>
         </div>
 
-        <div class="controls-container">
-            <div id="room1-available-ctrls" class="controls-container">
-                <button onclick="bookRoom('room1', 60)" class="btn btn-green-main">+ 1 Hr</button>
-                <button onclick="bookRoom('room1', 30)" class="btn btn-green-sub">+ 30 Min</button>
+        <div id="room2-col" class="room-column bg-available">
+            <div class="room-header">
+                <div id="room2-icon" class="icon-container"></div>
+                <h1 class="room-title">Conference Room B</h1>
+                <h2 class="room-subtitle">Room B</h2>
             </div>
-            <div id="room1-occupied-ctrls" class="controls-container hidden">
-                <button onclick="clearRoom('room1')" class="btn btn-neutral-clear">End Meeting Early</button>
-                <button onclick="bookRoom('room1', 15)" class="btn btn-red-action">+ 15 Min</button>
+
+            <div class="status-block">
+                <div class="status-label">Status:</div>
+                <div id="room2-status" class="status-state text-available">Free</div>
+                <div id="room2-timer-container" class="timer-wrapper hidden">
+                    <div class="timer-label">Time Remaining:</div>
+                    <div id="room2-timer" class="timer-display">00:00</div>
+                </div>
+            </div>
+
+            <div class="controls-container">
+                <div id="room2-available-ctrls" class="controls-container">
+                    <button onclick="bookRoom('room2', 60)" class="btn btn-green-main">+ 1 Hr</button>
+                    <button onclick="bookRoom('room2', 30)" class="btn btn-green-sub">+ 30 Min</button>
+                </div>
+                <div id="room2-occupied-ctrls" class="controls-container hidden">
+                    <button onclick="clearRoom('room2')" class="btn btn-neutral-clear">End Meeting Early</button>
+                    <button onclick="bookRoom('room2', 15)" class="btn btn-red-action">+ 15 Min</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="room2-col" class="room-column bg-available">
-        <div class="room-header">
-            <div id="room2-icon" class="icon-container"></div>
-            <h1 class="room-title">Conference Room B</h1>
-            <h2 class="room-subtitle">Room B</h2>
-        </div>
-
-        <div class="status-block">
-            <div class="status-label">Status:</div>
-            <div id="room2-status" class="status-state text-available">Free</div>
-            <div id="room2-timer-container" class="timer-wrapper hidden">
-                <div class="timer-label">Time Remaining:</div>
-                <div id="room2-timer" class="timer-display">00:00</div>
-            </div>
-        </div>
-
-        <div class="controls-container">
-            <div id="room2-available-ctrls" class="controls-container">
-                <button onclick="bookRoom('room2', 60)" class="btn btn-green-main">+ 1 Hr</button>
-                <button onclick="bookRoom('room2', 30)" class="btn btn-green-sub">+ 30 Min</button>
-            </div>
-            <div id="room2-occupied-ctrls" class="controls-container hidden">
-                <button onclick="clearRoom('room2')" class="btn btn-neutral-clear">End Meeting Early</button>
-                <button onclick="bookRoom('room2', 15)" class="btn btn-red-action">+ 15 Min</button>
-            </div>
-        </div>
+    <div class="utility-bar">
+        <button onclick="toggleFullscreen()" class="btn-fullscreen">Toggle Fullscreen Mode</button>
     </div>
 
     <script>
-        const openDoorImage = `<img src="door-open-svgrepo-com.svg" alt="Available">`;
-        const occupiedDoorImage = `<img src="door-occupied-svgrepo-com.svg" alt="Occupied">`;
+        // Set exact custom file names matching your vector assets
+        const openDoorImage = `<img src="door-open.svg" alt="Available">`;
+        const occupiedDoorImage = `<img src="door-occupied.svg" alt="Occupied">`;
 
         let currentRoomStates = {
             room1: null,
             room2: null
         };
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
 
         function getEndTime(room) {
             const val = localStorage.getItem(`${room}_endTime`);
@@ -281,7 +323,6 @@
             const isOccupied = endTime && endTime > now;
             const targetState = isOccupied ? 'occupied' : 'free';
 
-            // Clock countdown calculation
             if (isOccupied) {
                 const diff = endTime - now;
                 const totalSecs = Math.ceil(diff / 1000);
@@ -290,7 +331,6 @@
                 timerDisplay.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
             }
 
-            // Stateful DOM Guard Rendering
             if (currentRoomStates[room] !== targetState) {
                 currentRoomStates[room] = targetState;
 
